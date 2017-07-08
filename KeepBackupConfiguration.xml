@@ -1,0 +1,12 @@
+﻿<KeepBackup>
+  <Configuration>
+    <Enrcyption>
+      <Password passwd="somePassword!583" salt="88verySaltyAroundHere"/>
+    </Enrcyption>
+    <Backlisting>
+      <Directories>
+        <Directory endsWith=" Previews.lrdata" />
+      </Directories> 
+    </Backlisting>
+  </Configuration>
+</KeepBackup>
