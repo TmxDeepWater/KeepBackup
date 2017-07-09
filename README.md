@@ -118,11 +118,11 @@ Thoughts on Performance
 KeepBackup is very fast, at least in my opinion, when it comes to adding new files (e.g. photos). The new files will be added to storage, renaming files doesn’t cause any files in storage to be deleted and backed up again.
 Initial Backups take some time. First of all, every file needs to be hashed. I’m using Sha256 which is very secure, but maybe there are faster algorithms?
 Then each file must be compressed and encrypted, which takes time.
-After that the result is hashed again. This could be avoided,, but the checksum of the compressed and encrypted file is stored in the manifest and is used for validatestorage.
+After that the result is hashed again. This could be avoided, but the checksum of the compressed and encrypted file is stored in the manifest and is used for validatestorage.
 I got it faster by using parallelism and handling small files with memory streams, larger files with temporary files.
 It is probably possible so get is a lot faster.
 
-##Future plans
+## Future plans
 
 - More tests
 - Cleaning up code and commenting
@@ -131,7 +131,7 @@ It is probably possible so get is a lot faster.
 - Removing a combination of inventories might free up a lot of space in storage. Garbage analysis might be extended to look for this. Also, it could be enhanced to give an overview which files would be removed and if there is new version of the file in later inventories (same path, other hash).
 - More ideas?
 
-##Compatibility
+## Compatibility
 
 There are already a lot of storages with backups in existence. Changes to the storage format are somewhat critical. Any new version of KeepBackup needs to be able to restore the current structure and format of the storage. In addition, an automated upgrade command to a potentially new storage format would be great. Since a lot of backups are uploaded to cloud drives the current format must remain restorable. The partition feature mentioned above might be a good solution for this. New partitions in the storage get a new version, old partitions stay as they are.
  
