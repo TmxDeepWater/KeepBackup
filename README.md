@@ -1,7 +1,9 @@
 # KeepBackup
+
 Simple, yet efficient Backups
 
 ## What is KeepBackup?
+
 KeepBackup is a simple yet smart tool to back up your files. It was mainly developed with photos in mind, but course it can be used for documents of any kind of any files you might want to backup.
 Why another backup program?
 Well, I couldn’t find a program which was simple, smart and free. I’ll describe my requirements and what makes KeepBackup special in the following text.
@@ -11,6 +13,7 @@ What’s the status?
 You might call it a working prototype. I’m using it for my backups. However, there are many things that can be improved. And it’s currently a command line tool, there is no GUI.
 
 ## Technology?
+
 I’s written in C# based on .NET Framework.
 It uses the Apache log4net library to write logfiles and make console output. And it contains source code from the LZMA SDK (7-zip) for compression.
 More information about these components can be found here:
@@ -20,8 +23,10 @@ http://www.7-zip.org/sdk.html
 As I understand their licensing terms it can be freely used and redistributed. If there are any licensing issues, please contact me.
 
 ## Key issues for backups?
+
 I’ll try to explain what I want from a backup tool. KeepBackup was designed with these requirements in mind.
-1. The tool should backup a directory (“origin”) to another directory (“storage”), which is maybe on a USB disc or a NAS.
+
+1. The tool should backup a directory ("origin") to another directory ("storage"), which is maybe on a USB disc or a NAS.
 2. The tool would be run regularly, maybe daily or weekly.
 3. It should never backup the same file twice. Every file that has been backed up before and is unchanged should not be backed up to the same storage again. This must be true, even if the file was renamed or moved. There is no need to backup it again, it just should be restored to its new path - in case you ever need to restore a backup.
 4. If there are multiple copies of the same file at origin, only one backup is needed in storage. Of course while restoring the multiple copies should be restored as they were.
@@ -32,6 +37,7 @@ I’ll try to explain what I want from a backup tool. KeepBackup was designed wi
 9. Is should be possible the track and analyze changes over time. So, it should be possible to track changes from one backup to the next, but also from an arbitrarily old backup to a arbitrarily newer one. Which files were deleted? Moved? Overwritten? Renamed?
 
 ## How is this achieved?
+
 Most people have a path and a filename in mind, if they think about a file. I addition there is some metadata, especially the date and time of creation and last modification. For most programs, the filename and path is the key to the file.
 For KeepBackup however, the path and filename is also just metadata. The files are managed and identified by their checksum.
 So, if the same file has already been backed up before, KeepBackup would not backup it again, because the checksum is already present in storage.
@@ -42,11 +48,13 @@ An inventory is created each time you make the first backup of an origin and thu
 The manifest is an xml file in the storage which contains information about all files in storage from all backups. Strictly this file isn’t needed. However, it’s nice for testing and so check consistency of the storage.
 
 ## Some more nice features
+
 1. You can blacklist files and directories via configuration. I use this to blacklist the previews Adobe Photoshop Lightroom creates, for example.
 2. All files are compressed and encrypted. You can change password in the configuration. Inventories and manifest are currently plain xml, however.
 3. There is a not well tested “hidden feature” called “partitions”. In case you don’t want to change your storage, you can tell KeepBackup to store new files to a different location. This is handy if you uploaded your storage to a cloud drive and don’t want is to change.
 
 ## Inventories
+
 The current version of KeepBackup stores the inventory at origin and in the storage.
 I thought it’s a good reminder to see at the origin when the last inventory was created. It might show, that the next backup is overdue. The previous inventory at origin is also used to recover the checksums of all unmoved and unchanged files.
 You might not want a backup program to add files to your origin. You can delete the inventories at origin with no risk, since for restoring files the inventories at the storage is used.
@@ -115,6 +123,7 @@ I got it faster by using parallelism and handling small files with memory stream
 It is probably possible so get is a lot faster.
 
 ##Future plans
+
 - More tests
 - Cleaning up code and commenting
 - Performance (see above)
@@ -123,5 +132,6 @@ It is probably possible so get is a lot faster.
 - More ideas?
 
 ##Compatibility
+
 There are already a lot of storages with backups in existence. Changes to the storage format are somewhat critical. Any new version of KeepBackup needs to be able to restore the current structure and format of the storage. In addition, an automated upgrade command to a potentially new storage format would be great. Since a lot of backups are uploaded to cloud drives the current format must remain restorable. The partition feature mentioned above might be a good solution for this. New partitions in the storage get a new version, old partitions stay as they are.
  
