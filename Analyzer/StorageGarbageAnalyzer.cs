@@ -21,7 +21,7 @@ namespace KeepBackup.Analyzer
 
         public void Analyze()
         {
-            Inventory[] inventories = Inventory.GetInventoriesNewestFirst(_Store.Directory, _Configuration).ToArray();
+            List<Inventory> inventories = Inventory.GetInventoriesNewestFirst(_Store.Directory, _Configuration).Reverse().ToList();
 
             Dictionary<Inventory, List<string>> hashes = new Dictionary<Inventory, List<string>>();
 
@@ -31,37 +31,50 @@ namespace KeepBackup.Analyzer
                 hashes.Add(inv, list);
             }
 
-            Dictionary<Inventory, HashSet<string>> uniqueHashes = new Dictionary<Inventory, HashSet<string>>();
-
+            // look at single inventories
             foreach (Inventory inventory in inventories)
             {
-                var uh = GetUniqueHashes(inventory, (IEnumerable<Inventory>)inventories);
-                if (uh.Count > 0)
-                    uniqueHashes.Add(inventory, uh);
-            }
+                HashSet<string> uniqueHashes = GetUniqueHashes(new Inventory[] { inventory }, inventories);
 
-            foreach (Inventory i in uniqueHashes.Keys.OrderByDescending(x => x.Name))
-            {
-                var ms = _Store.GetManifestObjects(uniqueHashes[i]).ToArray();
+                var ms = _Store.GetManifestObjects(uniqueHashes).ToArray();
                 double sizeSourceMB = ms.Sum(x => x.SizeSource) / (1024.0 * 1024.0);
                 double sizeTargetMB = ms.Sum(x => x.SizeTarget) / (1024.0 * 1024.0);
 
-                Program.log.InfoFormat("removal of inventory '{0}' would safe {1:0.00} MB, uncompressed {2:0.00} MB", i.Name, sizeTargetMB, sizeSourceMB);
+                Program.log.InfoFormat("removal of inventory '{0}' would safe {1:0.00} MB, uncompressed {2:0.00} MB", inventory.Name, sizeTargetMB, sizeSourceMB);
+            }
+
+            // look at inceremental inventories
+            for (int i=1; i<inventories.Count-1; i++)
+            {
+                IEnumerable<Inventory> nInventories = inventories.Take(i + 1);
+                HashSet<string> uniqueHashes = GetUniqueHashes(nInventories, inventories);
+
+                var ms = _Store.GetManifestObjects(uniqueHashes).ToArray();
+                double sizeSourceMB = ms.Sum(x => x.SizeSource) / (1024.0 * 1024.0);
+                double sizeTargetMB = ms.Sum(x => x.SizeTarget) / (1024.0 * 1024.0);
+
+                Program.log.Info("removal of inventories");
+                foreach (var inv in nInventories)
+                    Program.log.Info("  "+inv.Name);
+                Program.log.InfoFormat("would safe {0:0.00} MB, uncompressed {1:0.00} MB", sizeTargetMB, sizeSourceMB);
             }
         }
 
-        public static HashSet<string> GetUniqueHashes(Inventory iventory, IEnumerable<Inventory> other)
+        public static HashSet<string> GetUniqueHashes(IEnumerable<Inventory> iventories, IEnumerable<Inventory> others)
         {
-            HashSet<string> hash = new HashSet<string>(iventory.Folder.AllFiles.Select(x => x.Sha256));
+            var files = from i in iventories from f in i.Folder.AllFiles select f;
 
-            foreach (Inventory inv2 in other)
+            HashSet<string> hash = new HashSet<string>(files.Select(x => x.Sha256));
+
+            foreach (Inventory other in others)
             {
-                if (inv2 == iventory)
+                if (iventories.Contains(other))
                     continue;
 
-                foreach (var h in inv2.Folder.AllFiles.Select(x => x.Sha256))
+                foreach (var h in other.Folder.AllFiles.Select(x => x.Sha256))
                     hash.Remove(h);
             }
+
             hash.TrimExcess();
             return hash;
         }
