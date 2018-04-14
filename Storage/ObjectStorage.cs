@@ -73,7 +73,7 @@ namespace KeepBackup.Storage
             return _Manifest.ManifestObjects.Where(x => hashSet.Contains(x.Sha256source));
         }
 
-        private static IEnumerable<FileJob> GetBackupJobs(IEnumerable<IFile> files, DirectoryInfo objectsDir, string password, string salt, out List<FileJob> alternateSource, Predicate<string> alreadyBackuped)
+        private static IEnumerable<FileJob> GetBackupJobs(IEnumerable<IFile> files, DirectoryInfo objectsDir, string password, string salt, Predicate<string> alreadyBackuped)
         {
             IList<IFile> fs = files.ToList();
             Program.log.Info("backup files total: " + fs.Count());
@@ -82,14 +82,10 @@ namespace KeepBackup.Storage
 
             Dictionary<string, FileJob> hashSetUnequalFiles = new Dictionary<string, FileJob>();
 
-            alternateSource = new List<FileJob>();
-
             foreach (var cj in copyJobs)
             {
                 if (!hashSetUnequalFiles.ContainsKey(cj.SourceFile.Sha256))
                     hashSetUnequalFiles.Add(cj.SourceFile.Sha256, cj);
-                else
-                    alternateSource.Add(cj);
             }
 
             Program.log.Info("backup unequal files: " + hashSetUnequalFiles.Count());
@@ -100,8 +96,6 @@ namespace KeepBackup.Storage
             {
                 if (!alreadyBackuped(cj.SourceFile.Sha256))
                     notExisting.Add(cj);
-                else
-                    alternateSource.Add(cj);
             }
 
             Program.log.Info("backup files after removing already backuped ones: " + notExisting.Count());
@@ -130,8 +124,7 @@ namespace KeepBackup.Storage
 
         public void Backup(Inventory inventory, DateTime timestamp)
         {
-            List<FileJob> alternateSource;
-            List<FileJob> jobs = GetBackupJobs(inventory.Folder.AllFiles, _PartitionManager.CurrentPartitionDir, _Configuration.Password, _Configuration.Salt, out alternateSource, _Manifest.ContainsSha).ToList();
+            List<FileJob> jobs = GetBackupJobs(inventory.Folder.AllFiles, _PartitionManager.CurrentPartitionDir, _Configuration.Password, _Configuration.Salt, _Manifest.ContainsSha).ToList();
 
             int countTotal = jobs.Count();
             long sizeTotal = jobs.Sum(x => x.SourceFile.SizeBytes);
@@ -210,7 +203,7 @@ namespace KeepBackup.Storage
                 Program.log.InfoFormat("done");
             }
 
-            _Manifest.AddAlternateSources(alternateSource.Select(x => x.SourceFile), timestamp);
+            //_Manifest.AddAlternateSources(alternateSource.Select(x => x.SourceFile), timestamp);
 
             inventory.Save(_Dir, timestamp);
         }
