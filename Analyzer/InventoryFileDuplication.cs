@@ -74,18 +74,28 @@ namespace KeepBackup.Analyzer
             {
                 var hashes = folder.AllFiles.Select(x => x.Sha256).ToList();
 
+                //look, if folder is empty
+                if (hashes.Count == 0)
+                    continue;
+
                 //look, if any file has no duplicate
                 if (hashes.Any(x => !duplHash2Size.ContainsKey(x)))
                     continue;
 
                 //look, if any duplicate is not in this folder or a subfolder
+                bool atLeastOneFileWithoutExternalDuplicate = false;
                 foreach (string hash in hashes)
                 {
-                    var duplicateFolders = _AllFilesByHash[hash].Select(x => x.Folder);
-                    bool allInside = duplicateFolders.All(x => folder.IsEqualOrSubfolder(x));
+                    var foldersOfDuplicates = _AllFilesByHash[hash].Select(x => x.Folder);
+                    bool allInside = foldersOfDuplicates.All(x => folder.IsEqualOrSubfolder(x));
                     if (allInside)
+                    {
+                        atLeastOneFileWithoutExternalDuplicate = true;
                         continue;
+                    }
                 }
+                if (atLeastOneFileWithoutExternalDuplicate)
+                    continue;
 
                 double mb = folder.AllFiles.Select(x => x.SizeBytes).Sum() / (1024.0 * 1024.0);
                 sizeAndFolder.Add(new KeyValuePair<double, string>(mb, folder.GetPathFromRoot()));
