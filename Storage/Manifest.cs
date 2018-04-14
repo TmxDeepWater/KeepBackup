@@ -15,7 +15,7 @@ namespace KeepBackup.Storage
         private const string MANIFEST_FILENAME = "KeepBackup-ObjectStore.manifest";
 
         private readonly FileInfo _ManifestFile;
-        private readonly XDocument _Xml;
+        private XDocument _Xml;
 
         private Dictionary<string,int> _Hashes2Partition = new Dictionary<string, int>(StringComparer.Ordinal);
 
@@ -26,12 +26,12 @@ namespace KeepBackup.Storage
             if (!_ManifestFile.Exists)
                 _Xml = GetNewManifest();
             else
-                _Xml = OpenManifest();
+                OpenManifest();
         }
 
-        private XDocument OpenManifest()
+        private void OpenManifest()
         {
-            XDocument xml = XDocument.Load(_ManifestFile.FullName);
+            _Xml = XDocument.Load(_ManifestFile.FullName);
 
             foreach (var m in ManifestObjects)
                 _Hashes2Partition.Add(m.Sha256source, m.Partition);
@@ -51,8 +51,6 @@ namespace KeepBackup.Storage
             double percent = (sizeTargetMB / sizeSourceMB) * 100.0;
 
             Program.log.InfoFormat("manifest: {0:0.00} MB ({1:0.00} MB compressed) -> {2:0.00}% ratio", sizeSourceMB, sizeTargetMB, percent);
-
-            return xml;
         }
 
         internal int GetPartition(string sha256)
