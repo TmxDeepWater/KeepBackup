@@ -50,10 +50,17 @@ namespace KeepBackup.OriginInventory
 
             foreach (var dir in _FileSystemDir.EnumerateDirectories("*", SearchOption.TopDirectoryOnly))
             {
-                if (Configuration.IsBlacklisted(dir))
-                    Program.log.Info("skipping blacklisted directory " + dir.FullName);
+                if (Configuration.IsBlacklisted(dir, out bool log))
+                {
+                    if (log)
+                    {
+                        Program.log.Info("skipping blacklisted directory " + dir.FullName);
+                    }
+                }
                 else
+                {
                     subFolders.Add(new FileSystemFolder(this, dir, Configuration));
+                }
             }
 
             return subFolders;
@@ -65,10 +72,17 @@ namespace KeepBackup.OriginInventory
 
             foreach (var file in _FileSystemDir.EnumerateFiles("*", SearchOption.TopDirectoryOnly))
             {
-                if (Configuration.IsBlacklisted(file))
-                    Program.log.Info("skipping blacklisted file " + file.FullName);
+                if (Configuration.IsBlacklisted(file, out bool log))
+                {
+                    if (log)
+                    {
+                        Program.log.Info("skipping blacklisted file " + file.FullName);
+                    }
+                }
                 else
+                {
                     files.Add(new FileSystemFile(this, file));
+                }
             }
 
             return files;

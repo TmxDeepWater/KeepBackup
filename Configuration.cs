@@ -39,14 +39,34 @@ namespace KeepBackup
             get { return _Salt; }
         }
 
-        public bool IsBlacklisted(FileInfo fi)
+        public bool IsBlacklisted(FileInfo fi, out bool log)
         {
-            return (fi.Name.StartsWith("KeepBackup", StringComparison.OrdinalIgnoreCase) &&
-                fi.Name.EndsWith(".inventory", StringComparison.OrdinalIgnoreCase));
+            if (fi.Name.StartsWith("KeepBackup", StringComparison.OrdinalIgnoreCase) &&
+                fi.Name.EndsWith(".inventory", StringComparison.OrdinalIgnoreCase))
+            {
+                log = false;
+                return true;
+            }
+
+            if (fi.Name.Equals("Thumbs.db", StringComparison.OrdinalIgnoreCase))
+            {
+                log = true;
+                return true;
+            }
+
+            log = false;
+            return false;
         }
-        public bool IsBlacklisted(DirectoryInfo di)
+        public bool IsBlacklisted(DirectoryInfo di, out bool log)
         {
-            return _DirectoriesBlacklistEndsWith.Any(x => di.Name.EndsWith(x, StringComparison.Ordinal));
+            if (_DirectoriesBlacklistEndsWith.Any(x => di.Name.EndsWith(x, StringComparison.Ordinal)))
+            {
+                log = true;
+                return true;
+            }
+
+            log = false;
+            return false;
         }
     }
 }
