@@ -10,7 +10,7 @@ KeepBackup is a simple yet smart tool to back up your files. It was mainly devel
 ## Why another backup program?
 Well, I couldn’t find a program which was simple, smart and free. I’ll describe my requirements and what makes KeepBackup special in the following text.
 
-I used robocopy for backups a long time. My main concern was, that I delete over overwrite a file by accident and then refresh my backups. After that I notice the file is gone, but I can’t restore it, since it was already removed from my backups. So, the restore of deleted and overwritten files was an issue for me.
+I used robocopy for backups a long time. My main concern was, that I delete or overwrite a file by accident and then refresh my backups. After that I notice the file is gone, but I can’t restore it, since it was already removed from my backups. So, the restore of deleted and overwritten files was an issue for me.
 Also, I sometimes rename or move a large number of files (photos) and it was very annoying that the files were backed up all over again.
 What’s the status?
 You might call it a working prototype. I’m using it for my backups. However, there are many things that can be improved. And it’s currently a command line tool, there is no GUI.
@@ -43,7 +43,7 @@ I’ll try to explain what I want from a backup tool. KeepBackup was designed wi
 
 ## How is this achieved?
 
-Most people have a path and a filename in mind, if they think about a file. I addition there is some metadata, especially the date and time of creation and last modification. For most programs, the filename and path is the key to the file.
+Most people have a path and a filename in mind, when they think about a file. I addition there is some metadata, especially the date and time of creation and last modification. For most programs, the filename and path is the key to the file.
 For KeepBackup however, the path and filename is also just metadata. The files are managed and identified by their checksum.
 So, if the same file has already been backed up before, KeepBackup would not backup it again, because the checksum is already present in storage.
 
