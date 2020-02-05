@@ -6,6 +6,7 @@
     <Backlisting>
       <Directories>
         <Directory endsWith=" Previews.lrdata" />
+        <Directory endsWith=" Helper.lrdata" />
       </Directories> 
     </Backlisting>
   </Configuration>
