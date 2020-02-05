@@ -123,9 +123,9 @@ namespace KeepBackup.Analyzer
                         {
                             string path = f.GetPathFromRoot();
                             if (_AllFilesAByPath.ContainsKey(path))
-                                Program.log.Info("   new: " + f.GetPathFromRoot() + "\"");
-                            else
                                 Program.log.Info("   overwritten: " + f.GetPathFromRoot() + "\"");
+                            else
+                                Program.log.Info("   new: " + f.GetPathFromRoot() + "\"");
                         }
                     }
                 }
@@ -153,7 +153,7 @@ namespace KeepBackup.Analyzer
                         if (_AllFilesBByPath.ContainsKey(oldLoc))
                             Program.log.Info("  REMOVED (overwritten) \"" + oldLoc + "\"");
                         else
-                            Program.log.Info("  REMOVED \"" + oldLoc + "\"");
+                            Program.log.Info("   REMOVED \"" + oldLoc + "\"");
                     }
 
                     foreach (var newLoc in newLocations)
