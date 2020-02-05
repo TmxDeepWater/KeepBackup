@@ -123,7 +123,7 @@ namespace KeepBackup
 
         private static void Compare(string[] args, Configuration configuration)
         {
-            log.Info("analyze file duplication in inventory");
+            log.Info("comparing two inventories");
             if (args.Length != 3)
             {
                 log.Error("wrong number of command line args");
