@@ -62,12 +62,17 @@ namespace KeepBackup.Storage
 
         public SizeEnum GetSize()
         {
+            return GetSize(_SourceFile.SizeBytes);
+        }
+
+        public static SizeEnum GetSize(long sizeBytes)
+        {
             const long size40MB = 1024L * 1024L * 40L;
             const long size160MB = size40MB * 4L;
 
-            if (_SourceFile.SizeBytes <= size40MB)
+            if (sizeBytes <= size40MB)
                 return SizeEnum.Small;
-            else if (_SourceFile.SizeBytes <= size160MB)
+            else if (sizeBytes <= size160MB)
                 return SizeEnum.Medium;
             else
                 return SizeEnum.Large;
@@ -101,18 +106,41 @@ namespace KeepBackup.Storage
 
         public static Stream JustDecryptAndDecompress(FileInfo file, string password, string salt)
         {
-            MemoryStream decompressedStream = new MemoryStream();
-
-            using (FileStream source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (StreamCryptoWrapper decryptedSource = StreamCryptoWrapper.Decrypt(source, password, salt))
-            using (MemoryStream decryptedMemory = new MemoryStream())
+            var size = GetSize(file.Length);
+            if (size != SizeEnum.Large)
             {
-                decryptedSource.CryptoStream.CopyTo(decryptedMemory);
-                decryptedMemory.Position = 0;
-                KeepLzmaCompressor.Decompress(decryptedMemory, decompressedStream);
-                decompressedStream.Position = 0;                
+                Stream decompressedStream = new MemoryStream();
+
+                using (FileStream source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (StreamCryptoWrapper decryptedSource = StreamCryptoWrapper.Decrypt(source, password, salt))
+                using (Stream decryptedMemory = new MemoryStream())
+                {
+                    decryptedSource.CryptoStream.CopyTo(decryptedMemory);
+                    decryptedMemory.Position = 0;
+                    KeepLzmaCompressor.Decompress(decryptedMemory, decompressedStream);
+                    decompressedStream.Position = 0;
+                }
+                return decompressedStream;
             }
-            return decompressedStream;
+            else
+            {
+                Stream decompressedStream = new MemoryStream();
+
+                using (FileStream source = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (StreamCryptoWrapper decryptedSource = StreamCryptoWrapper.Decrypt(source, password, salt))
+                {                        
+                    FileInfo tmpFile = new FileInfo(Path.GetTempFileName());
+                    using (Stream decryptedMemory = new FileStream(tmpFile.FullName, FileMode.Open))
+                    {
+                        decryptedSource.CryptoStream.CopyTo(decryptedMemory);
+                        decryptedMemory.Position = 0;
+                        KeepLzmaCompressor.Decompress(decryptedMemory, decompressedStream);
+                        decompressedStream.Position = 0;
+                    }
+                    tmpFile.Delete();
+                }
+                return decompressedStream;
+            }
         }
 
         private Stream GetCompressedStream()

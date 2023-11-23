@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KeepBackup.Analyzer;
+using KeepBackup.Helper;
 
 namespace KeepBackup
 {
@@ -38,6 +39,9 @@ namespace KeepBackup
 
                 if (string.Equals("createinventory", args[0], StringComparison.OrdinalIgnoreCase))
                     CreateInventory(args, configuration, timestamp);
+
+                if (string.Equals("recreatemanifest", args[0], StringComparison.OrdinalIgnoreCase))
+                    ReCreateManifest(args, configuration);
 
                 if (string.Equals("restore", args[0], StringComparison.OrdinalIgnoreCase))
                     Restore(args, configuration);
@@ -337,6 +341,77 @@ namespace KeepBackup
 
             log.Info("finished restore");
         }
+
+        private static void ReCreateManifest(string[] args, Configuration configuration)
+        {
+            log.Info("recreate manifest");
+            if (args.Length != 2)
+            {
+                log.Error("wrong number of command line args");
+                Environment.Exit(-1);
+            }
+
+            DirectoryInfo targetDir = new DirectoryInfo(args[1]);
+            if (!targetDir.Exists)
+            {
+                log.Error("target does not exists");
+                Environment.Exit(-1);
+            }
+
+            Manifest newManifest = new Manifest(targetDir);
+
+            var allFiles = targetDir.EnumerateFiles("*", SearchOption.AllDirectories);
+
+            List<FileInfo> files =
+                allFiles
+                .Where(x => x.Name.EndsWith(ObjectStorage.OBJ_EXTENSION, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.Length)
+                .ToList();
+            
+            int count = files.Count;
+
+            for (int i = 0; i < count; i++)
+            {
+                FileInfo fi = files[i];
+
+                double percentFiles = ((double)i / (double)count) * 100.0;
+                Program.log.Info(string.Format("file {0} / {1} ({2:0.00}%)", i + 1, count, percentFiles));
+
+                string sourceHash1 = fi.Name.Substring(0, fi.Name.Length - ObjectStorage.OBJ_EXTENSION.Length);
+
+                long targetSize = fi.Length;
+
+                Program.log.Info(string.Format("file '{0}' ({1:0.00} MB)", fi.Name, (double)targetSize / (double)(1024 * 1024)));
+
+                string targetHash = KeepHasher.GetHash(fi);
+                
+                long sourceSize;
+                string sourceHash2 = null;
+                using (Stream s = FileJob.JustDecryptAndDecompress(fi, configuration.Password, configuration.Salt))
+                {
+                    sourceSize = s.Length;
+                    sourceHash2 = KeepHasher.GetHash(s);
+                }
+
+                if (sourceHash1 != sourceHash2)
+                    throw new Exception();
+
+                int partition;
+
+                string name = fi.Directory.Parent.Parent.Name;
+                if (name.Equals("obj", StringComparison.OrdinalIgnoreCase))
+                    partition = 0;
+                else if (name.IndexOf("obj_", StringComparison.OrdinalIgnoreCase) == 0)
+                    partition = int.Parse(name.Substring(4));
+                else
+                    throw new Exception();
+
+                newManifest.Add(sourceHash1, sourceSize, targetHash, targetSize, partition);
+            }
+
+            log.Info("finished create new manifest");
+        }
+
 
         private static void ValidateStorage(string[] args, Configuration configuration)
         {

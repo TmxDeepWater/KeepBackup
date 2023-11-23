@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -83,22 +84,27 @@ namespace KeepBackup.Storage
             }
         }
 
-        public void Add(IFile file, string targetHash, long targetSize, DateTime timestamp, int partition)
+        public void Add(IFile file, string targetHash, long targetSize, int partition)
+        {
+            Add(file.Sha256, file.SizeBytes, targetHash, targetSize, partition);
+        }
+
+        public void Add(string sourceHash, long sourceSizeBytes, string targetHash, long targetSize, int partition)
         {
             lock (this)
             {
                 _Xml.Root.Add(
                     new XElement("File",
-                            new XAttribute("sha256source", file.Sha256),
+                            new XAttribute("sha256source", sourceHash),
                             new XAttribute("sha256target", targetHash),
-                            new XAttribute("sizeSource", file.SizeBytes),
+                            new XAttribute("sizeSource", sourceSizeBytes),
                             new XAttribute("sizeTarget", targetSize),
                             (partition != 0) ? new XAttribute("partition", partition.ToString()) : null
                     )
                 );
                 Save();
 
-                _Hashes2Partition.Add(file.Sha256, partition);
+                _Hashes2Partition.Add(sourceHash, partition);
             }
         }
 

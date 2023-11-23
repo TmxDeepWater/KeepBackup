@@ -149,7 +149,7 @@ namespace KeepBackup.Storage
             Action<FileJob> go = delegate (FileJob job)
             {
                 job.Execute();
-                _Manifest.Add(job.SourceFile, job.ChecksumTarget, job.SizeTarget ?? 0, timestamp, _PartitionManager.CurrentPartitionNumber);
+                _Manifest.Add(job.SourceFile, job.ChecksumTarget, job.SizeTarget ?? 0, _PartitionManager.CurrentPartitionNumber);
             };
 
             if (smallJobs.Length > 0)
