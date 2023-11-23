@@ -87,7 +87,7 @@ namespace KeepBackup.OriginInventory
             return i;               
         }
 
-        public static Inventory FromFileSystem(DirectoryInfo dir, Configuration configuration)
+        public static Inventory FromFileSystem(DirectoryInfo dir, Configuration configuration, bool rehash)
         {
             Program.log.Info("building inventory from file system");
 
@@ -98,16 +98,19 @@ namespace KeepBackup.OriginInventory
 
             Program.log.Info("done");
 
-            Program.log.Info("trying to find old inventory to recover hashes");
-            Inventory old = Inventory.GetInventoriesNewestFirst(dir, configuration).FirstOrDefault();
-
-            if (old == null)
-                Program.log.Info("none found");
-            else
+            if (!rehash)
             {
-                Program.log.Info("reusing old hashes");
-                inv.ReuseSha256s(old);
-                Program.log.Info("done");
+                Program.log.Info("trying to find old inventory to recover hashes");
+                Inventory old = Inventory.GetInventoriesNewestFirst(dir, configuration).FirstOrDefault();
+
+                if (old == null)
+                    Program.log.Info("none found");
+                else
+                {
+                    Program.log.Info("reusing old hashes");
+                    inv.ReuseSha256s(old);
+                    Program.log.Info("done");
+                }
             }
 
             Program.log.Info("collecting files to hash");

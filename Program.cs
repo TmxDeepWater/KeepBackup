@@ -224,7 +224,7 @@ namespace KeepBackup
             }            
 
             log.Info("creating inventory for " + originDir.FullName);
-            Inventory i = Inventory.FromFileSystem(originDir, configuration);
+            Inventory i = Inventory.FromFileSystem(originDir, configuration, false);
             log.Info("inventory created");
             string file = i.Save(timestamp);
 
@@ -238,7 +238,7 @@ namespace KeepBackup
         private static void CreateInventory(string[] args, Configuration configuration, DateTime timestamp)
         {
             log.Info("create an inventory");
-            if (args.Length != 2)
+            if (args.Length != 2 && args.Length != 3)
             {
                 log.Error("wrong number of command line args");
                 Environment.Exit(-1);
@@ -251,8 +251,10 @@ namespace KeepBackup
                 Environment.Exit(-1);
             }
             
+            bool rehash = args.Length == 3 && args[2] == "rehash";
+
             log.Info("creating inventory for " + originDir.FullName);
-            Inventory i = Inventory.FromFileSystem(originDir, configuration);
+            Inventory i = Inventory.FromFileSystem(originDir, configuration, rehash);
             log.Info("inventory created");
             string file = i.Save(timestamp);
         }
